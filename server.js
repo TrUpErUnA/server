@@ -65,6 +65,7 @@ const options = {
 };
 
 https.createServer(options, app)
-   .listen(port, () => {
+   .listen(port, '0.0.0.0', () => {
       console.log(`Сервер HTTPS запущен на порту ${port}`);
    });
+
