@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 10000;
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // если вдруг датчик шлёт URL-кодированные данные
 
 // Переменная для хранения последних данных с датчика
 let latestSensorData = null;
@@ -10,15 +11,23 @@ let latestSensorData = null;
 // Эндпоинт для датчика
 app.post('/sensor-data', (req, res) => {
    console.log("===== ПОЛУЧЕН ЗАПРОС ОТ ДАТЧИКА =====");
-   console.log("Заголовки:", req.headers);
-   console.log("Тело запроса:", req.body);
+   console.log("Время:", new Date().toISOString());
+   console.log("Метод:", req.method);
+   console.log("URL:", req.originalUrl);
+   console.log("Заголовки:", JSON.stringify(req.headers, null, 2));
+   console.log("Тело запроса:", JSON.stringify(req.body, null, 2));
+
+   // Сохраняем данные
+   latestSensorData = req.body;
+
    res.sendStatus(200);
 });
 
-
 // Эндпоинт для навыка Алисы
 app.post('/', (req, res) => {
-   console.log('Запрос от Алисы:', req.body);
+   console.log("===== ЗАПРОС ОТ АЛИСЫ =====");
+   console.log("Тело запроса:", JSON.stringify(req.body, null, 2));
+
    const { request, session, version } = req.body;
 
    let responseText = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
