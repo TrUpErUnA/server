@@ -11,15 +11,9 @@ let latestSensorData = null;
 // Эндпоинт для датчика
 app.post('/sensor-data', (req, res) => {
    console.log("===== ПОЛУЧЕН ЗАПРОС ОТ ДАТЧИКА =====");
-   console.log("Время:", new Date().toISOString());
-   console.log("Метод:", req.method);
-   console.log("URL:", req.originalUrl);
-   console.log("Заголовки:", JSON.stringify(req.headers, null, 2));
-   console.log("Тело запроса:", JSON.stringify(req.body, null, 2));
-
-   // Сохраняем данные
-   latestSensorData = req.body;
-
+   console.log("Заголовки запроса:", req.headers);
+   console.log("Тип содержимого:", req.headers['content-type']);
+   console.log("Тело запроса:", req.body);
    res.sendStatus(200);
 });
 
