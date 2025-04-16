@@ -1,76 +1,56 @@
 const express = require('express');
-const axios = require('axios');
 const app = express();
-const port = process.env.PORT || 10000;  // используем переменную окружения для порта
+const port = process.env.PORT || 10000;
 
-// Настройка для обработки JSON
 app.use(express.json());
 
-// Эндпоинт для получения данных от датчика
-app.post('/sensor', (req, res) => {
-   const sensorData = req.body;
-   console.log('Данные от датчика:', sensorData);
+let lastSensorData = null;
 
-   // Проверка наличия данных перед использованием find
-   const sdsP1 = sensorData.sensordatavalues ? sensorData.sensordatavalues.find(v => v.value_type === 'SDS_P1') : null;
-   const sdsP2 = sensorData.sensordatavalues ? sensorData.sensordatavalues.find(v => v.value_type === 'SDS_P2') : null;
-
-   if (sdsP1 && sdsP2) {
-      const message = `Концентрация частиц PM1.0 (SDS_P1): ${sdsP1.value}, Концентрация частиц PM2.5 (SDS_P2): ${sdsP2.value}`;
-      res.json({ message });
-   } else {
-      res.status(400).json({ error: 'Не удалось получить данные о концентрации частиц' });
+// Эндпоинт для обновления данных от датчика
+app.post('/sensor-data', (req, res) => {
+   const { sensordatavalues } = req.body;
+   if (!sensordatavalues) {
+      return res.status(400).json({ error: 'Нет данных от датчика' });
    }
+
+   lastSensorData = sensordatavalues;
+   console.log('Сохранены новые данные от датчика:', sensordatavalues);
+   res.json({ status: 'ok' });
 });
 
-// Эндпоинт для обработки запросов от Алисы
-app.post('/skill', async (req, res) => {
+// Главный эндпоинт Алисы
+app.post('/', (req, res) => {
+   console.log('Запрос от Алисы:', req.body);
+
    const command = req.body.request.command.toLowerCase();
 
-   // Если команда включает запрос о концентрации частиц
-   if (command.includes('концентрация частиц')) {
-      try {
-         // Отправляем запрос на сервер для получения данных с датчика
-         const sensorData = await axios.post('https://yandex-air-skill.onrender.com/sensor', {
-            sensordatavalues: [
-               { value_type: 'SDS_P1', value: '2.40' },
-               { value_type: 'SDS_P2', value: '1.15' }
-            ]
-         });
+   let text = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
 
-         // Извлекаем данные из ответа
-         const message = sensorData.data.message;
+   if (command.includes('качество воздуха') || command.includes('концентрация частиц')) {
+      if (lastSensorData) {
+         const sdsP1 = lastSensorData.find(v => v.value_type === 'SDS_P1');
+         const sdsP2 = lastSensorData.find(v => v.value_type === 'SDS_P2');
 
-         // Отправляем ответ Алисе
-         res.json({
-            version: '1.0',
-            response: {
-               text: message,
-               end_session: false
-            }
-         });
-      } catch (error) {
-         console.error('Ошибка при запросе данных с сервера:', error);
-         res.json({
-            version: '1.0',
-            response: {
-               text: 'Произошла ошибка при получении данных о концентрации частиц.',
-               end_session: true
-            }
-         });
-      }
-   } else {
-      res.json({
-         version: '1.0',
-         response: {
-            text: 'Извините, я не могу понять вашу команду.',
-            end_session: true
+         if (sdsP1 && sdsP2) {
+            text = `Концентрация частиц PM10: ${sdsP1.value}, PM2.5: ${sdsP2.value}`;
+         } else {
+            text = 'Данные от датчика получены, но не полные.';
          }
-      });
+      } else {
+         text = 'Пока нет актуальных данных от датчика.';
+      }
    }
+
+   res.json({
+      version: req.body.version,
+      session: req.body.session,
+      response: {
+         text,
+         end_session: false
+      }
+   });
 });
 
-// Запуск сервера
 app.listen(port, () => {
-   console.log(`Сервер слушает порт ${port}`);
+   console.log(`Сервер запущен на порту ${port}`);
 });
