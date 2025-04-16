@@ -1,6 +1,6 @@
 const fs = require('fs');
 const express = require('express');
-const https = require('https');
+const http = require('http');
 const app = express();
 const port = process.env.PORT || 10000; // Используем порт 10000
 
@@ -66,6 +66,6 @@ const options = {
 
 https.createServer(options, app)
    .listen(port, '0.0.0.0', () => {
-      console.log(`Сервер HTTPS запущен на порту ${port}`);
+      console.log(`Сервер HTTP запущен на порту ${port}`);
    });
 
