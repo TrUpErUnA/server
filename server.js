@@ -1,8 +1,6 @@
-const fs = require('fs');
 const express = require('express');
-const http = require('http');
 const app = express();
-const port = process.env.PORT || 10000; // Используем порт 10000
+const port = process.env.PORT || 10000;  // Используй порт 10000, если не задано другого
 
 app.use(express.json());
 
@@ -58,14 +56,6 @@ app.post('/', (req, res) => {
    });
 });
 
-// Настроим HTTPS сервер без проверки сертификатов
-const options = {
-   // Важно: в production не рекомендуется использовать rejectUnauthorized: false, это небезопасно.
-   rejectUnauthorized: false
-};
-
-https.createServer(options, app)
-   .listen(port, '0.0.0.0', () => {
-      console.log(`Сервер HTTP запущен на порту ${port}`);
-   });
-
+app.listen(port, () => {
+   console.log(`Сервер запущен на порту ${port}`);
+});
