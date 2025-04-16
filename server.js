@@ -1,9 +1,8 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 10000;  // Используй порт 10000, если не задано другого
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // если датчик шлёт URL-кодированные данные
 
 // Переменная для хранения последних данных с датчика
 let latestSensorData = null;
@@ -18,12 +17,13 @@ app.post('/sensor-data', (req, res) => {
    // Сохраняем данные от датчика
    latestSensorData = req.body;
 
+   // Ответ с кодом 200, подтверждающий успешный прием данных
    res.sendStatus(200);
 });
 
-// Эндпоинт для навыка Алисы
+// Эндпоинт для обработки запроса от Алисы или других клиентов
 app.post('/', (req, res) => {
-   console.log("===== ЗАПРОС ОТ АЛИСЫ =====");
+   console.log("===== ЗАПРОС ОТ КЛИЕНТА =====");
    console.log("Тело запроса:", JSON.stringify(req.body, null, 2));
 
    const { request, session, version } = req.body;
@@ -31,9 +31,16 @@ app.post('/', (req, res) => {
    let responseText = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
 
    if (request.command.includes('качество') || request.command.includes('воздух')) {
-      if (latestSensorData && latestSensorData.sensor === 'data') {
-         // Пример ответа с данными, полученными от датчика
-         responseText = `Данные от датчика: ${JSON.stringify(latestSensorData)}`;
+      if (latestSensorData && latestSensorData.sensordatavalues) {
+         // Пример обработки полученных данных с датчика
+         const sdsP1 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P1');
+         const sdsP2 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P2');
+
+         if (sdsP1 && sdsP2) {
+            responseText = `Концентрация частиц PM10: ${sdsP1.value}, PM2.5: ${sdsP2.value}.`;
+         } else {
+            responseText = 'Данные о концентрации частиц пока недоступны.';
+         }
       } else {
          responseText = 'Пока нет данных с датчика. Попробуйте чуть позже.';
       }
