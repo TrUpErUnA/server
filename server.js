@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const port = process.env.PORT || 2000;  // используем переменную окружения для порта
+const port = process.env.PORT || 10000;  // используем переменную окружения для порта
 
 // Настройка для обработки JSON
 app.use(express.json());
