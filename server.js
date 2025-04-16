@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 10000;  // Используй порт 10000, если не задано другого
+const port = process.env.PORT || 2000;  // Используй порт 10000, если не задано другого
 
 app.use(express.json());
 
