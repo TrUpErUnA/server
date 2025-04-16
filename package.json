@@ -1,0 +1,15 @@
+{
+   "name": "yandex-air-skill",
+   "version": "1.0.0",
+   "description": "API для получения данных с датчика для Яндекс.Алисы",
+   "main": "server.js",
+   "scripts": {
+      "start": "node server.js"
+   },
+   "dependencies": {
+      "express": "^4.17.1",
+      "axios": "^0.21.1"
+   },
+   "author": "",
+   "license": "ISC"
+}
