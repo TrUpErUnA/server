@@ -9,11 +9,12 @@ let latestSensorData = null;
 
 // Эндпоинт для датчика
 app.post('/sensor-data', (req, res) => {
-   const sensorData = req.body;
-   console.log('Получены данные от датчика:', sensorData);
-   latestSensorData = sensorData;
-   res.status(200).send('Данные получены');
+   console.log("===== ПОЛУЧЕН ЗАПРОС ОТ ДАТЧИКА =====");
+   console.log("Заголовки:", req.headers);
+   console.log("Тело запроса:", req.body);
+   res.sendStatus(200);
 });
+
 
 // Эндпоинт для навыка Алисы
 app.post('/', (req, res) => {
