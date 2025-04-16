@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 10000;
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // если вдруг датчик шлёт URL-кодированные данные
+app.use(express.urlencoded({ extended: true })); // если датчик шлёт URL-кодированные данные
 
 // Переменная для хранения последних данных с датчика
 let latestSensorData = null;
@@ -14,6 +14,10 @@ app.post('/sensor-data', (req, res) => {
    console.log("Заголовки запроса:", req.headers);
    console.log("Тип содержимого:", req.headers['content-type']);
    console.log("Тело запроса:", req.body);
+
+   // Сохраняем данные от датчика
+   latestSensorData = req.body;
+
    res.sendStatus(200);
 });
 
@@ -27,15 +31,9 @@ app.post('/', (req, res) => {
    let responseText = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
 
    if (request.command.includes('качество') || request.command.includes('воздух')) {
-      if (latestSensorData && latestSensorData.sensordatavalues) {
-         const sdsP1 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P1');
-         const sdsP2 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P2');
-
-         if (sdsP1 && sdsP2) {
-            responseText = `Концентрация частиц PM10: ${sdsP1.value}, PM2.5: ${sdsP2.value}.`;
-         } else {
-            responseText = 'Данные о концентрации частиц пока недоступны.';
-         }
+      if (latestSensorData && latestSensorData.sensor === 'data') {
+         // Пример ответа с данными, полученными от датчика
+         responseText = `Данные от датчика: ${JSON.stringify(latestSensorData)}`;
       } else {
          responseText = 'Пока нет данных с датчика. Попробуйте чуть позже.';
       }
