@@ -4,48 +4,44 @@ const port = process.env.PORT || 10000;
 
 app.use(express.json());
 
-let lastSensorData = null;
+// Переменная для хранения последних данных с датчика
+let latestSensorData = null;
 
-// Эндпоинт для обновления данных от датчика
+// Эндпоинт для датчика
 app.post('/sensor-data', (req, res) => {
-   const { sensordatavalues } = req.body;
-   if (!sensordatavalues) {
-      return res.status(400).json({ error: 'Нет данных от датчика' });
-   }
-
-   lastSensorData = sensordatavalues;
-   console.log('Сохранены новые данные от датчика:', sensordatavalues);
-   res.json({ status: 'ok' });
+   const sensorData = req.body;
+   console.log('Получены данные от датчика:', sensorData);
+   latestSensorData = sensorData;
+   res.status(200).send('Данные получены');
 });
 
-// Главный эндпоинт Алисы
+// Эндпоинт для навыка Алисы
 app.post('/', (req, res) => {
    console.log('Запрос от Алисы:', req.body);
+   const { request, session, version } = req.body;
 
-   const command = req.body.request.command.toLowerCase();
+   let responseText = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
 
-   let text = 'Я не совсем поняла ваш запрос. Попробуйте снова.';
-
-   if (command.includes('качество воздуха') || command.includes('концентрация частиц')) {
-      if (lastSensorData) {
-         const sdsP1 = lastSensorData.find(v => v.value_type === 'SDS_P1');
-         const sdsP2 = lastSensorData.find(v => v.value_type === 'SDS_P2');
+   if (request.command.includes('качество') || request.command.includes('воздух')) {
+      if (latestSensorData && latestSensorData.sensordatavalues) {
+         const sdsP1 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P1');
+         const sdsP2 = latestSensorData.sensordatavalues.find(v => v.value_type === 'SDS_P2');
 
          if (sdsP1 && sdsP2) {
-            text = `Концентрация частиц PM10: ${sdsP1.value}, PM2.5: ${sdsP2.value}`;
+            responseText = `Концентрация частиц PM10: ${sdsP1.value}, PM2.5: ${sdsP2.value}.`;
          } else {
-            text = 'Данные от датчика получены, но не полные.';
+            responseText = 'Данные о концентрации частиц пока недоступны.';
          }
       } else {
-         text = 'Пока нет актуальных данных от датчика.';
+         responseText = 'Пока нет данных с датчика. Попробуйте чуть позже.';
       }
    }
 
    res.json({
-      version: req.body.version,
-      session: req.body.session,
+      version,
+      session,
       response: {
-         text,
+         text: responseText,
          end_session: false
       }
    });
